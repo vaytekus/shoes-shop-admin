@@ -22,9 +22,10 @@ interface Props {
   onDeleted: () => void
   onRefresh: () => void
   onFieldsChange: (variantId: string, fields: VariantFields) => void
+  uploadCtx?: { gender?: string; category?: string; brand?: string; modelName?: string }
 }
 
-export default function VariantFormRemote({ productId, variant, onDeleted, onRefresh, onFieldsChange }: Props) {
+export default function VariantFormRemote({ productId, variant, onDeleted, onRefresh, onFieldsChange, uploadCtx }: Props) {
   const [name, setName] = useState(variant.name)
   const [sku, setSku] = useState(variant.sku ?? '')
   const [colorName, setColorName] = useState(variant.colorName ?? '')
@@ -41,7 +42,7 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
   }
 
   const handleDrop = async (files: File[]) => {
-    await uploadImages(productId, variant.id, files)
+    await uploadImages(productId, variant.id, files, uploadCtx)
     onRefresh()
   }
 

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Package, Tag, LogOut, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, Package, Tag, ShoppingBag, LogOut, Sun, Moon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
@@ -8,6 +8,7 @@ const links = [
   { to: '/', label: 'Дашборд', icon: LayoutDashboard },
   { to: '/products', label: 'Продукти', icon: Package },
   { to: '/categories', label: 'Категорії', icon: Tag },
+  { to: '/orders', label: 'Замовлення', icon: ShoppingBag },
 ]
 
 export default function Sidebar() {

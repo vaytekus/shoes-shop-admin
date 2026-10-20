@@ -29,6 +29,8 @@ function createEmptyVariant(): LocalVariant {
   }
 }
 
+type Errors = Partial<Record<string, string>>
+
 export default function ProductCreatePage() {
   const navigate = useNavigate()
   const { data: categoriesData } = useQuery({ queryKey: ['categories'], queryFn: getCategories })
@@ -39,10 +41,14 @@ export default function ProductCreatePage() {
     gender: '', discountPercent: '', categoryId: '',
   })
   const [variants, setVariants] = useState<LocalVariant[]>([])
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<Errors>({})
+  const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
+  const set = (key: string, val: string) => {
+    setForm(f => ({ ...f, [key]: val }))
+    if (errors[key]) setErrors(e => ({ ...e, [key]: undefined }))
+  }
 
   const updateVariant = (tempId: string, updated: LocalVariant) =>
     setVariants(vs => vs.map(v => v.tempId === tempId ? updated : v))
@@ -50,9 +56,23 @@ export default function ProductCreatePage() {
   const removeVariant = (tempId: string) =>
     setVariants(vs => vs.filter(v => v.tempId !== tempId))
 
+  const validate = (): boolean => {
+    const e: Errors = {}
+    if (!form.name.trim()) e.name = "Назва обов'язкова"
+    if (!form.price || Number(form.price) <= 0) e.price = 'Вкажіть ціну'
+    if (form.discountPercent && (Number(form.discountPercent) < 0 || Number(form.discountPercent) > 100))
+      e.discountPercent = 'Від 0 до 100'
+    variants.forEach((v, i) => {
+      if (!v.name.trim()) e[`variant_${i}`] = "Назва варіанту обов'язкова"
+    })
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    setError('')
+    if (!validate()) return
+    setSubmitError('')
     setLoading(true)
     try {
       const res = await client.post<string>('/products', {
@@ -76,7 +96,12 @@ export default function ProductCreatePage() {
         const variantId = variantRes.data
 
         if (v.images.length > 0) {
-          await uploadImages(productId, variantId, v.images)
+          await uploadImages(productId, variantId, v.images, {
+            gender: form.gender || undefined,
+            category: categories.find(c => c.id === form.categoryId)?.name,
+            brand: form.brand || undefined,
+            modelName: form.name || undefined,
+          })
         }
 
         for (const s of v.sizes) {
@@ -86,7 +111,7 @@ export default function ProductCreatePage() {
 
       navigate('/products')
     } catch {
-      setError('Помилка при створенні продукту')
+      setSubmitError('Помилка при створенні продукту')
     } finally {
       setLoading(false)
     }
@@ -98,7 +123,13 @@ export default function ProductCreatePage() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1.5">
           <Label>Назва</Label>
-          <Input placeholder="Nike Air Max 90" value={form.name} onChange={e => set('name', e.target.value)} required />
+          <Input
+            placeholder="Nike Air Max 90"
+            value={form.name}
+            onChange={e => set('name', e.target.value)}
+            className={errors.name ? 'border-destructive' : ''}
+          />
+          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Опис</Label>
@@ -107,11 +138,25 @@ export default function ProductCreatePage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Ціна</Label>
-            <Input type="number" placeholder="2500" value={form.price} onChange={e => set('price', e.target.value)} required />
+            <Input
+              type="number"
+              placeholder="2500"
+              value={form.price}
+              onChange={e => set('price', e.target.value)}
+              className={errors.price ? 'border-destructive' : ''}
+            />
+            {errors.price && <p className="text-xs text-destructive">{errors.price}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Знижка %</Label>
-            <Input type="number" placeholder="0" value={form.discountPercent} onChange={e => set('discountPercent', e.target.value)} />
+            <Input
+              type="number"
+              placeholder="0"
+              value={form.discountPercent}
+              onChange={e => set('discountPercent', e.target.value)}
+              className={errors.discountPercent ? 'border-destructive' : ''}
+            />
+            {errors.discountPercent && <p className="text-xs text-destructive">{errors.discountPercent}</p>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -142,21 +187,25 @@ export default function ProductCreatePage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-base">Варіанти</Label>
-            <Button type="button" variant="outline" size="sm" onClick={() => setVariants(vs => [...vs, createEmptyVariant()])}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setVariants(vs => [createEmptyVariant(), ...vs])}>
               <Plus size={14} className="mr-1" /> Додати варіант
             </Button>
           </div>
-          {variants.map(v => (
+          {variants.map((v, i) => (
             <VariantFormLocal
               key={v.tempId}
               variant={v}
-              onChange={updated => updateVariant(v.tempId, updated)}
+              nameError={errors[`variant_${i}`]}
+              onChange={updated => {
+                updateVariant(v.tempId, updated)
+                if (errors[`variant_${i}`]) setErrors(e => ({ ...e, [`variant_${i}`]: undefined }))
+              }}
               onRemove={() => removeVariant(v.tempId)}
             />
           ))}
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {submitError && <p className="text-sm text-destructive">{submitError}</p>}
       </form>
 
       <FixedBar

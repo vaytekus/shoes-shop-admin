@@ -28,9 +28,10 @@ interface Props {
   variant: LocalVariant
   onChange: (v: LocalVariant) => void
   onRemove: () => void
+  nameError?: string
 }
 
-export default function VariantFormLocal({ variant, onChange, onRemove }: Props) {
+export default function VariantFormLocal({ variant, onChange, onRemove, nameError }: Props) {
   const uid = useId()
 
   const set = (key: keyof LocalVariant, val: string) =>
@@ -95,7 +96,14 @@ export default function VariantFormLocal({ variant, onChange, onRemove }: Props)
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor={`${uid}-name`}>Назва</Label>
-          <Input id={`${uid}-name`} value={variant.name} onChange={(e) => set('name', e.target.value)} placeholder="Чорний" />
+          <Input
+            id={`${uid}-name`}
+            value={variant.name}
+            onChange={(e) => set('name', e.target.value)}
+            placeholder="Чорний"
+            className={nameError ? 'border-destructive' : ''}
+          />
+          {nameError && <p className="text-xs text-destructive">{nameError}</p>}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${uid}-sku`}>SKU</Label>

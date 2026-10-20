@@ -53,3 +53,30 @@ export interface AuthUser {
   email: string
   roles: string[]
 }
+
+export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'
+
+export interface ShippingAddress {
+  street: string
+  city: string
+  country: string
+  zipCode: string
+}
+
+export interface OrderItem {
+  productId: string
+  productName: string
+  price: number
+  quantity: number
+  imageUrl: string
+}
+
+export interface Order {
+  id: string
+  customerId: string
+  status: OrderStatus
+  totalAmount: number
+  createdAt: string
+  shippingAddress: ShippingAddress
+  items: OrderItem[]
+}

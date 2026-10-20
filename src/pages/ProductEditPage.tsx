@@ -41,7 +41,8 @@ export default function ProductEditPage() {
     gender: '', discountPercent: '', categoryId: '',
   })
   const [variantChanges, setVariantChanges] = useState<Record<string, VariantFields>>({})
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
+  const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -57,7 +58,20 @@ export default function ProductEditPage() {
     })
   }, [product])
 
-  const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
+  const set = (key: string, val: string) => {
+    setForm(f => ({ ...f, [key]: val }))
+    if (errors[key]) setErrors(e => ({ ...e, [key]: undefined }))
+  }
+
+  const validate = (): boolean => {
+    const e: Partial<Record<string, string>> = {}
+    if (!form.name.trim()) e.name = "Назва обов'язкова"
+    if (!form.price || Number(form.price) <= 0) e.price = 'Вкажіть ціну'
+    if (form.discountPercent && (Number(form.discountPercent) < 0 || Number(form.discountPercent) > 100))
+      e.discountPercent = 'Від 0 до 100'
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['product', id] })
 
@@ -66,7 +80,8 @@ export default function ProductEditPage() {
   }, [])
 
   const handleSave = async () => {
-    setError('')
+    if (!validate()) return
+    setSubmitError('')
     setLoading(true)
     try {
       await client.put(`/products/${id}`, {
@@ -92,7 +107,7 @@ export default function ProductEditPage() {
 
       navigate('/products')
     } catch {
-      setError('Помилка при збереженні')
+      setSubmitError('Помилка при збереженні')
     } finally {
       setLoading(false)
     }
@@ -113,7 +128,13 @@ export default function ProductEditPage() {
       <div className="space-y-5">
         <div className="space-y-1.5">
           <Label>Назва</Label>
-          <Input placeholder="Nike Air Max 90" value={form.name} onChange={e => set('name', e.target.value)} />
+          <Input
+            placeholder="Nike Air Max 90"
+            value={form.name}
+            onChange={e => set('name', e.target.value)}
+            className={errors.name ? 'border-destructive' : ''}
+          />
+          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Опис</Label>
@@ -122,11 +143,25 @@ export default function ProductEditPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Ціна</Label>
-            <Input type="number" placeholder="2500" value={form.price} onChange={e => set('price', e.target.value)} />
+            <Input
+              type="number"
+              placeholder="2500"
+              value={form.price}
+              onChange={e => set('price', e.target.value)}
+              className={errors.price ? 'border-destructive' : ''}
+            />
+            {errors.price && <p className="text-xs text-destructive">{errors.price}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Знижка %</Label>
-            <Input type="number" placeholder="0" value={form.discountPercent} onChange={e => set('discountPercent', e.target.value)} />
+            <Input
+              type="number"
+              placeholder="0"
+              value={form.discountPercent}
+              onChange={e => set('discountPercent', e.target.value)}
+              className={errors.discountPercent ? 'border-destructive' : ''}
+            />
+            {errors.discountPercent && <p className="text-xs text-destructive">{errors.discountPercent}</p>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -154,7 +189,7 @@ export default function ProductEditPage() {
           </Select>
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {submitError && <p className="text-sm text-destructive">{submitError}</p>}
       </div>
 
       <div className="mt-8 space-y-4">
@@ -164,7 +199,7 @@ export default function ProductEditPage() {
             <Plus size={14} className="mr-1" /> Додати варіант
           </Button>
         </div>
-        {product?.variants.map(v => (
+        {[...(product?.variants ?? [])].reverse().map(v => (
           <VariantFormRemote
             key={v.id}
             productId={id!}
@@ -172,6 +207,12 @@ export default function ProductEditPage() {
             onDeleted={refresh}
             onRefresh={refresh}
             onFieldsChange={handleFieldsChange}
+            uploadCtx={{
+              gender: form.gender || undefined,
+              category: categories.find(c => c.id === form.categoryId)?.name,
+              brand: form.brand || undefined,
+              modelName: form.name || undefined,
+            }}
           />
         ))}
       </div>

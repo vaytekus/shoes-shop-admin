@@ -22,12 +22,27 @@ export const updateVariant = (productId: string, variantId: string, data: { name
 export const deleteVariant = (productId: string, variantId: string) =>
   client.delete(`/products/${productId}/variants/${variantId}`)
 
-export const uploadImages = (productId: string, variantId: string, files: File[]) => {
+interface UploadImagesContext {
+  gender?: string
+  category?: string
+  brand?: string
+  modelName?: string
+}
+
+export const uploadImages = (productId: string, variantId: string, files: File[], ctx: UploadImagesContext = {}) => {
   const formData = new FormData()
   files.forEach((f) => formData.append('files', f))
-  return client.post<{ url: string[] }>(`/products/${productId}/variants/${variantId}/images`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  const params = new URLSearchParams()
+  if (ctx.gender) params.append('gender', ctx.gender)
+  if (ctx.category) params.append('category', ctx.category)
+  if (ctx.brand) params.append('brand', ctx.brand)
+  if (ctx.modelName) params.append('modelName', ctx.modelName)
+  const query = params.toString()
+  return client.post<{ url: string[] }>(
+    `/products/${productId}/variants/${variantId}/images${query ? `?${query}` : ''}`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
 }
 
 export const addSize = (productId: string, variantId: string, data: { size: string; stockQuantity: number }) =>

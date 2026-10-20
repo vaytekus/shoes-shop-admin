@@ -7,6 +7,8 @@ import ProductsPage from '@/pages/ProductsPage'
 import ProductCreatePage from '@/pages/ProductCreatePage'
 import CategoriesPage from '@/pages/CategoriesPage'
 import ProductEditPage from '@/pages/ProductEditPage'
+import OrdersPage from '@/pages/OrdersPage'
+import OrderDetailPage from '@/pages/OrderDetailPage'
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="products/create" element={<ProductCreatePage />} />
           <Route path="products/:id/edit" element={<ProductEditPage />} />
           <Route path="categories" element={<CategoriesPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:id" element={<OrderDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
