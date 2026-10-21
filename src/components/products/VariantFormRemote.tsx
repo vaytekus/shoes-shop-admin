@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import DeleteDialog from '@/components/ui/delete-dialog'
 import ImageDropzone from './ImageDropzone'
 import SizeRangeGenerator from './SizeRangeGenerator'
 import type { ProductVariant } from '@/types'
 import { deleteVariant, uploadImages, addSize, updateSize, deleteSize } from '@/api/productsApi'
+import { toast } from 'sonner'
 
 export interface VariantFields {
   name: string
@@ -36,13 +38,14 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
   }, [name, sku, colorName, colorHex])
 
   const handleDelete = async () => {
-    if (!confirm(`Видалити варіант "${variant.name}"?`)) return
     await deleteVariant(productId, variant.id)
+    toast.success('Варіант видалено')
     onDeleted()
   }
 
   const handleDrop = async (files: File[]) => {
     await uploadImages(productId, variant.id, files, uploadCtx)
+    toast.success('Фото завантажено')
     onRefresh()
   }
 
@@ -60,9 +63,15 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
     <div className="border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted-foreground">ID: {variant.id.slice(0, 8)}...</span>
-        <Button type="button" variant="ghost" size="icon" onClick={handleDelete}>
-          <Trash2 size={15} />
-        </Button>
+        <DeleteDialog
+          title={`Видалити варіант "${variant.name}"?`}
+          description="Варіант, всі його фото і розміри будуть видалені назавжди."
+          onConfirm={handleDelete}
+        >
+          <Button type="button" variant="ghost" size="icon">
+            <Trash2 size={15} />
+          </Button>
+        </DeleteDialog>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

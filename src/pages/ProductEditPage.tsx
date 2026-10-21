@@ -4,22 +4,29 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCategories } from '@/api/categoriesApi'
 import { getProductById, createVariant, updateVariant } from '@/api/productsApi'
 import client from '@/api/client'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import ComboInput from '@/components/ui/combo-input'
 import VariantFormRemote, { type VariantFields } from '@/components/products/VariantFormRemote'
 import FixedBar from '@/components/layout/FixedBar'
 import { Plus } from 'lucide-react'
+import {
+  SECTION_OPTIONS, MATERIAL_OPTIONS, WIDTH_OPTIONS, SEASON_OPTIONS,
+  HEEL_OPTIONS, PURPOSE_OPTIONS, STYLE_OPTIONS, COUNTRY_OPTIONS,
+} from '@/constants/productOptions'
 
-const GENDER_OPTIONS = [
-  { value: 'men', label: 'Чоловіче' },
-  { value: 'women', label: 'Жіноче' },
-  { value: 'kids', label: 'Дитяче' },
-  { value: 'bags', label: 'Сумки' },
-  { value: 'accessories', label: 'Аксесуари' },
-]
+const emptyForm = {
+  name: '', description: '', price: '', brand: '',
+  section: '', discountPercent: '', categoryId: '',
+  upperMaterial: '', liningMaterial: '', insoleMaterial: '', soleMaterial: '',
+  width: '', season: '', heelHeight: '', purpose: '', style: '',
+  brandCountry: '', manufactureCountry: '',
+  isNew: false,
+}
 
 export default function ProductEditPage() {
   const { id } = useParams<{ id: string }>()
@@ -36,14 +43,15 @@ export default function ProductEditPage() {
   const categories = categoriesData?.data ?? []
   const product = productData?.data
 
-  const [form, setForm] = useState({
-    name: '', description: '', price: '', brand: '',
-    gender: '', discountPercent: '', categoryId: '',
-  })
+  const [form, setForm] = useState(emptyForm)
   const [variantChanges, setVariantChanges] = useState<Record<string, VariantFields>>({})
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
   const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const filteredCategories = form.section
+    ? categories.filter(c => c.section === form.section)
+    : categories
 
   useEffect(() => {
     if (!product) return
@@ -52,13 +60,25 @@ export default function ProductEditPage() {
       description: product.description,
       price: String(product.price),
       brand: product.brand ?? '',
-      gender: product.gender ?? '',
+      section: product.section ?? '',
       discountPercent: product.discountPercent != null ? String(product.discountPercent) : '',
       categoryId: product.categoryId ?? '',
+      upperMaterial: product.upperMaterial ?? '',
+      liningMaterial: product.liningMaterial ?? '',
+      insoleMaterial: product.insoleMaterial ?? '',
+      soleMaterial: product.soleMaterial ?? '',
+      width: product.width ?? '',
+      season: product.season ?? '',
+      heelHeight: product.heelHeight ?? '',
+      purpose: product.purpose ?? '',
+      style: product.style ?? '',
+      brandCountry: product.brandCountry ?? '',
+      manufactureCountry: product.manufactureCountry ?? '',
+      isNew: product.isNew ?? false,
     })
   }, [product])
 
-  const set = (key: string, val: string) => {
+  const set = (key: string, val: string | boolean) => {
     setForm(f => ({ ...f, [key]: val }))
     if (errors[key]) setErrors(e => ({ ...e, [key]: undefined }))
   }
@@ -89,9 +109,21 @@ export default function ProductEditPage() {
         description: form.description,
         price: Number(form.price),
         brand: form.brand || null,
-        gender: form.gender || null,
+        section: form.section || null,
         discountPercent: form.discountPercent ? Number(form.discountPercent) : null,
+        isNew: form.isNew,
         categoryId: form.categoryId || null,
+        upperMaterial: form.upperMaterial || null,
+        liningMaterial: form.liningMaterial || null,
+        insoleMaterial: form.insoleMaterial || null,
+        soleMaterial: form.soleMaterial || null,
+        width: form.width || null,
+        season: form.season || null,
+        heelHeight: form.heelHeight || null,
+        purpose: form.purpose || null,
+        style: form.style || null,
+        brandCountry: form.brandCountry || null,
+        manufactureCountry: form.manufactureCountry || null,
       })
 
       await Promise.all(
@@ -105,9 +137,11 @@ export default function ProductEditPage() {
         )
       )
 
+      toast.success('Продукт збережено')
       navigate('/products')
     } catch {
       setSubmitError('Помилка при збереженні')
+      toast.error('Помилка при збереженні')
     } finally {
       setLoading(false)
     }
@@ -126,14 +160,10 @@ export default function ProductEditPage() {
       <h1 className="text-2xl font-semibold mb-6">Редагування продукту</h1>
 
       <div className="space-y-5">
+        {/* Основна інформація */}
         <div className="space-y-1.5">
           <Label>Назва</Label>
-          <Input
-            placeholder="Nike Air Max 90"
-            value={form.name}
-            onChange={e => set('name', e.target.value)}
-            className={errors.name ? 'border-destructive' : ''}
-          />
+          <Input placeholder="Nike Air Max 90" value={form.name} onChange={e => set('name', e.target.value)} className={errors.name ? 'border-destructive' : ''} />
           {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
@@ -143,55 +173,119 @@ export default function ProductEditPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Ціна</Label>
-            <Input
-              type="number"
-              placeholder="2500"
-              value={form.price}
-              onChange={e => set('price', e.target.value)}
-              className={errors.price ? 'border-destructive' : ''}
-            />
+            <Input type="number" placeholder="2500" value={form.price} onChange={e => set('price', e.target.value)} className={errors.price ? 'border-destructive' : ''} />
             {errors.price && <p className="text-xs text-destructive">{errors.price}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Знижка %</Label>
-            <Input
-              type="number"
-              placeholder="0"
-              value={form.discountPercent}
-              onChange={e => set('discountPercent', e.target.value)}
-              className={errors.discountPercent ? 'border-destructive' : ''}
-            />
+            <Input type="number" placeholder="0" value={form.discountPercent} onChange={e => set('discountPercent', e.target.value)} className={errors.discountPercent ? 'border-destructive' : ''} />
             {errors.discountPercent && <p className="text-xs text-destructive">{errors.discountPercent}</p>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Бренд</Label>
-            <Input placeholder="Nike, Adidas, Puma..." value={form.brand} onChange={e => set('brand', e.target.value)} />
+            <Input placeholder="Nike" value={form.brand} onChange={e => set('brand', e.target.value)} />
           </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Основна категорія</Label>
-            <Select value={form.gender} onValueChange={v => set('gender', v)}>
+            <Label>Розділ</Label>
+            <Select value={form.section} onValueChange={v => { set('section', v); set('categoryId', '') }}>
               <SelectTrigger><SelectValue placeholder="Обрати..." /></SelectTrigger>
               <SelectContent>
-                {GENDER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                {SECTION_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Категорія</Label>
+            <Select value={form.categoryId} onValueChange={v => set('categoryId', v)}>
+              <SelectTrigger><SelectValue placeholder="Обрати..." /></SelectTrigger>
+              <SelectContent>
+                {filteredCategories.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{!form.section && c.section ? ` (${SECTION_OPTIONS.find(s => s.value === c.section)?.label ?? c.section})` : ''}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="space-y-1.5">
-          <Label>Категорія</Label>
-          <Select value={form.categoryId} onValueChange={v => set('categoryId', v)}>
-            <SelectTrigger><SelectValue placeholder="Обрати..." /></SelectTrigger>
-            <SelectContent>
-              {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+          <input type="checkbox" id="isNew" checked={form.isNew} onChange={e => set('isNew', e.target.checked)} className="w-4 h-4 accent-primary" />
+          <Label htmlFor="isNew">Новинка</Label>
+        </div>
+
+        {/* Матеріали */}
+        <div className="pt-2">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Матеріали</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Матеріал верху</Label>
+              <ComboInput value={form.upperMaterial} onChange={v => set('upperMaterial', v)} options={MATERIAL_OPTIONS} placeholder="Текстиль+екошкіра" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Матеріал підкладки</Label>
+              <ComboInput value={form.liningMaterial} onChange={v => set('liningMaterial', v)} options={MATERIAL_OPTIONS} placeholder="Текстиль" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Матеріал устілки</Label>
+              <ComboInput value={form.insoleMaterial} onChange={v => set('insoleMaterial', v)} options={MATERIAL_OPTIONS} placeholder="Текстиль" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Матеріал підошви</Label>
+              <ComboInput value={form.soleMaterial} onChange={v => set('soleMaterial', v)} options={MATERIAL_OPTIONS} placeholder="EBA" />
+            </div>
+          </div>
+        </div>
+
+        {/* Характеристики */}
+        <div className="pt-2">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Характеристики</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Повнота</Label>
+              <ComboInput value={form.width} onChange={v => set('width', v)} options={WIDTH_OPTIONS} placeholder="H" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Сезон</Label>
+              <ComboInput value={form.season} onChange={v => set('season', v)} options={SEASON_OPTIONS} placeholder="Літо" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Висота каблука</Label>
+              <ComboInput value={form.heelHeight} onChange={v => set('heelHeight', v)} options={HEEL_OPTIONS} placeholder="3.8 см" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Призначення</Label>
+              <ComboInput value={form.purpose} onChange={v => set('purpose', v)} options={PURPOSE_OPTIONS} placeholder="Повсякденні" />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label>Стиль взуття</Label>
+              <ComboInput value={form.style} onChange={v => set('style', v)} options={STYLE_OPTIONS} placeholder="повсякденний (Casual)" />
+            </div>
+          </div>
+        </div>
+
+        {/* Виробництво */}
+        <div className="pt-2">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Виробництво</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Країна реєстрації бренду</Label>
+              <ComboInput value={form.brandCountry} onChange={v => set('brandCountry', v)} options={COUNTRY_OPTIONS} placeholder="Німеччина" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Країна виробництва</Label>
+              <ComboInput value={form.manufactureCountry} onChange={v => set('manufactureCountry', v)} options={COUNTRY_OPTIONS} placeholder="В'єтнам" />
+            </div>
+          </div>
         </div>
 
         {submitError && <p className="text-sm text-destructive">{submitError}</p>}
       </div>
 
+      {/* Варіанти */}
       <div className="mt-8 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Варіанти</h2>
@@ -208,7 +302,7 @@ export default function ProductEditPage() {
             onRefresh={refresh}
             onFieldsChange={handleFieldsChange}
             uploadCtx={{
-              gender: form.gender || undefined,
+              section: form.section || undefined,
               category: categories.find(c => c.id === form.categoryId)?.name,
               brand: form.brand || undefined,
               modelName: form.name || undefined,
@@ -217,11 +311,7 @@ export default function ProductEditPage() {
         ))}
       </div>
 
-      <FixedBar
-        onSave={handleSave}
-        onCancel={() => navigate('/products')}
-        loading={loading}
-      />
+      <FixedBar onSave={handleSave} onCancel={() => navigate('/products')} loading={loading} />
     </div>
   )
 }

@@ -23,7 +23,7 @@ export const deleteVariant = (productId: string, variantId: string) =>
   client.delete(`/products/${productId}/variants/${variantId}`)
 
 interface UploadImagesContext {
-  gender?: string
+  section?: string
   category?: string
   brand?: string
   modelName?: string
@@ -33,7 +33,7 @@ export const uploadImages = (productId: string, variantId: string, files: File[]
   const formData = new FormData()
   files.forEach((f) => formData.append('files', f))
   const params = new URLSearchParams()
-  if (ctx.gender) params.append('gender', ctx.gender)
+  if (ctx.section) params.append('section', ctx.section)
   if (ctx.category) params.append('category', ctx.category)
   if (ctx.brand) params.append('brand', ctx.brand)
   if (ctx.modelName) params.append('modelName', ctx.modelName)

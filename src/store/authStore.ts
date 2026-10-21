@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@/types'
 
 interface AuthState {
@@ -13,20 +12,18 @@ function parseJwt(token: string): AuthUser | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     const roles: string[] = payload.realm_access?.roles ?? []
-    return { email: payload.email ?? payload.sub, roles }
+    const firstName: string = payload.given_name ?? ''
+    const lastName: string = payload.family_name ?? ''
+    const name = [firstName, lastName].filter(Boolean).join(' ') || null
+    return { email: payload.email ?? payload.sub, roles, name }
   } catch {
     return null
   }
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      setToken: (token) => set({ token, user: parseJwt(token) }),
-      logout: () => set({ token: null, user: null }),
-    }),
-    { name: 'admin-auth' }
-  )
-)
+export const useAuthStore = create<AuthState>()((set) => ({
+  token: null,
+  user: null,
+  setToken: (token) => set({ token, user: parseJwt(token) }),
+  logout: () => set({ token: null, user: null }),
+}))
