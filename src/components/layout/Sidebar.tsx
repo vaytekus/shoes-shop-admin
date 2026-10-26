@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Package, Tag, ShoppingBag, Users, LogOut, Sun, Moon, Camera } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
@@ -44,6 +44,8 @@ export default function Sidebar() {
   const displayName = user?.name ?? user?.email ?? ''
   const initials = user ? getInitials(user.name, user.email) : '?'
 
+  const location = useLocation()
+
   return (
     <aside className="w-60 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="px-6 py-5 border-b border-sidebar-border">
@@ -51,24 +53,26 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
-        {links.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              cn(
+        {links.map(({ to, label, icon: Icon }) => {
+          const isActive = to === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(to)
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                  ? 'bg-primary text-primary-foreground font-medium'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
-              )
-            }
-          >
-            <Icon size={16} />
-            {label}
-          </NavLink>
-        ))}
+              )}
+            >
+              <Icon size={16} />
+              {label}
+            </NavLink>
+          )
+        })}
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-1">

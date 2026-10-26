@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getUsers, createUser } from '@/api/usersApi'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,7 @@ const PAGE_SIZE = 20
 const emptyForm = { email: '', password: '', firstName: '', lastName: '' }
 
 export default function UsersPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -106,7 +108,7 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {users.map(u => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/users/${u.id}`)}>
                   <TableCell className="text-sm">{u.email}</TableCell>
                   <TableCell className="text-sm">
                     {[u.firstName, u.lastName].filter(Boolean).join(' ') || '—'}

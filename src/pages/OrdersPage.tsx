@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { getOrders } from '@/api/ordersApi'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import DateRangePicker from '@/components/ui/date-range-picker'
 import { Search, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { OrderStatus } from '@/types'
+import CustomerName from '@/components/orders/CustomerName'
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   Pending: 'Нове',
@@ -21,12 +21,12 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   Cancelled: 'Скасовано',
 }
 
-const STATUS_VARIANT: Record<OrderStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  Pending: 'outline',
-  Processing: 'secondary',
-  Shipped: 'default',
-  Delivered: 'default',
-  Cancelled: 'destructive',
+const STATUS_CLASS: Record<OrderStatus, string> = {
+  Pending: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+  Processing: 'bg-blue-100 text-blue-800 border border-blue-200',
+  Shipped: 'bg-purple-100 text-purple-800 border border-purple-200',
+  Delivered: 'bg-green-100 text-green-800 border border-green-200',
+  Cancelled: 'bg-red-100 text-red-800 border border-red-200',
 }
 
 const PAGE_SIZE = 20
@@ -81,7 +81,14 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Замовлення</h1>
+      <h1 className="text-2xl font-semibold mb-4">Замовлення</h1>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {(Object.entries(STATUS_LABELS) as [OrderStatus, string][]).map(([s, label]) => (
+          <span key={s} className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_CLASS[s]}`}>
+            {label}
+          </span>
+        ))}
+      </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 min-w-48 max-w-xs">
@@ -131,13 +138,15 @@ export default function OrdersPage() {
               {paged.map(o => (
                 <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/orders/${o.id}`)}>
                   <TableCell className="font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}...</TableCell>
-                  <TableCell className="text-sm">{o.customerId.slice(0, 12)}...</TableCell>
+                  <TableCell className="text-sm"><CustomerName customerId={o.customerId} /></TableCell>
                   <TableCell>
-                    <Badge variant={STATUS_VARIANT[o.status]}>{STATUS_LABELS[o.status]}</Badge>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_CLASS[o.status]}`}>
+                      {STATUS_LABELS[o.status]}
+                    </span>
                   </TableCell>
                   <TableCell>{o.totalAmount.toLocaleString('uk-UA')} ₴</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(o.createdAt).toLocaleDateString('uk-UA')}
+                    {new Date(o.createdAt).toLocaleString('uk-UA')}
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={e => { e.stopPropagation(); navigate(`/orders/${o.id}`) }}>

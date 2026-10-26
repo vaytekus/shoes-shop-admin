@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCategories } from '@/api/categoriesApi'
-import { getProductById, createVariant, updateVariant } from '@/api/productsApi'
+import { getProductById, createVariant, updateVariant, reorderVariants } from '@/api/productsApi'
 import client from '@/api/client'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import ComboInput from '@/components/ui/combo-input'
 import VariantFormRemote, { type VariantFields } from '@/components/products/VariantFormRemote'
 import FixedBar from '@/components/layout/FixedBar'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronUp, ChevronDown } from 'lucide-react'
 import {
   SECTION_OPTIONS, MATERIAL_OPTIONS, WIDTH_OPTIONS, SEASON_OPTIONS,
   HEEL_OPTIONS, PURPOSE_OPTIONS, STYLE_OPTIONS, COUNTRY_OPTIONS,
@@ -48,6 +48,7 @@ export default function ProductEditPage() {
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
   const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [variants, setVariants] = useState(product?.variants ?? [])
 
   const filteredCategories = form.section
     ? categories.filter(c => c.section === form.section)
@@ -76,6 +77,10 @@ export default function ProductEditPage() {
       manufactureCountry: product.manufactureCountry ?? '',
       isNew: product.isNew ?? false,
     })
+  }, [product])
+
+  useEffect(() => {
+    setVariants(product?.variants ?? [])
   }, [product])
 
   const set = (key: string, val: string | boolean) => {
@@ -293,21 +298,50 @@ export default function ProductEditPage() {
             <Plus size={14} className="mr-1" /> Додати варіант
           </Button>
         </div>
-        {[...(product?.variants ?? [])].reverse().map(v => (
-          <VariantFormRemote
-            key={v.id}
-            productId={id!}
-            variant={v}
-            onDeleted={refresh}
-            onRefresh={refresh}
-            onFieldsChange={handleFieldsChange}
-            uploadCtx={{
-              section: form.section || undefined,
-              category: categories.find(c => c.id === form.categoryId)?.name,
-              brand: form.brand || undefined,
-              modelName: form.name || undefined,
-            }}
-          />
+        {variants.map((v, index) => (
+          <div key={v.id} className="relative pl-6">
+            <div className="absolute top-3 left-0 flex flex-col">
+              <button
+                type="button"
+                disabled={index === 0}
+                onClick={() => {
+                  const next = [...variants]
+                  ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
+                  setVariants(next)
+                  reorderVariants(id!, next.map(v => v.id))
+                }}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-20"
+              >
+                <ChevronUp size={16} />
+              </button>
+              <button
+                type="button"
+                disabled={index === variants.length - 1}
+                onClick={() => {
+                  const next = [...variants]
+                  ;[next[index + 1], next[index]] = [next[index], next[index + 1]]
+                  setVariants(next)
+                  reorderVariants(id!, next.map(v => v.id))
+                }}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-20"
+              >
+                <ChevronDown size={16} />
+              </button>
+            </div>
+            <VariantFormRemote
+              productId={id!}
+              variant={v}
+              onDeleted={refresh}
+              onRefresh={refresh}
+              onFieldsChange={handleFieldsChange}
+              uploadCtx={{
+                section: form.section || undefined,
+                category: categories.find(c => c.id === form.categoryId)?.name,
+                brand: form.brand || undefined,
+                modelName: form.name || undefined,
+              }}
+            />
+          </div>
         ))}
       </div>
 

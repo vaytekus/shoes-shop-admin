@@ -8,7 +8,7 @@ import DeleteDialog from '@/components/ui/delete-dialog'
 import ImageDropzone from './ImageDropzone'
 import SizeRangeGenerator from './SizeRangeGenerator'
 import type { ProductVariant } from '@/types'
-import { deleteVariant, uploadImages, addSize, updateSize, deleteSize } from '@/api/productsApi'
+import { deleteVariant, uploadImages, reorderImages, deleteImages, addSize, updateSize, deleteSize } from '@/api/productsApi'
 import { toast } from 'sonner'
 
 export interface VariantFields {
@@ -24,7 +24,7 @@ interface Props {
   onDeleted: () => void
   onRefresh: () => void
   onFieldsChange: (variantId: string, fields: VariantFields) => void
-  uploadCtx?: { gender?: string; category?: string; brand?: string; modelName?: string }
+  uploadCtx?: { section?: string; category?: string; brand?: string; modelName?: string }
 }
 
 export default function VariantFormRemote({ productId, variant, onDeleted, onRefresh, onFieldsChange, uploadCtx }: Props) {
@@ -46,6 +46,20 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
   const handleDrop = async (files: File[]) => {
     await uploadImages(productId, variant.id, files, uploadCtx)
     toast.success('Фото завантажено')
+    onRefresh()
+  }
+
+  const handleDeleteExisting = async (urls: string[]) => {
+    await deleteImages(productId, variant.id, urls)
+    toast.success(urls.length > 1 ? `Видалено ${urls.length} фото` : 'Фото видалено')
+    onRefresh()
+  }
+
+  const handleReorderExisting = async (from: number, to: number) => {
+    const urls = [...variant.imageUrls]
+    const [moved] = urls.splice(from, 1)
+    urls.splice(to, 0, moved)
+    await reorderImages(productId, variant.id, urls)
     onRefresh()
   }
 
@@ -136,7 +150,12 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
 
       <div className="space-y-1.5">
         <Label>Фото</Label>
-        <ImageDropzone existingUrls={variant.imageUrls} onDrop={handleDrop} />
+        <ImageDropzone
+          existingUrls={variant.imageUrls}
+          onDrop={handleDrop}
+          onReorderExisting={handleReorderExisting}
+          onDeleteExisting={handleDeleteExisting}
+        />
       </div>
     </div>
   )

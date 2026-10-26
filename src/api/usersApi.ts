@@ -32,3 +32,6 @@ export interface CreateUserRequest {
 
 export const createUser = (data: CreateUserRequest) =>
   client.post('/users/register', data)
+
+export const getUserById = (id: string) =>
+  client.get<KeycloakUser>(`/users/${id}`)

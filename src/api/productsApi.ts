@@ -53,3 +53,12 @@ export const updateSize = (productId: string, variantId: string, sizeId: string,
 
 export const deleteSize = (productId: string, variantId: string, sizeId: string) =>
   client.delete(`/products/${productId}/variants/${variantId}/sizes/${sizeId}`)
+
+export const reorderImages = (productId: string, variantId: string, urls: string[]) =>
+  client.put(`/products/${productId}/variants/${variantId}/images/reorder`, urls)
+
+export const deleteImages = (productId: string, variantId: string, urls: string[]) =>
+  client.delete(`/products/${productId}/variants/${variantId}/images`, { data: urls })
+
+export const reorderVariants = (productId: string, variantIds: string[]) =>
+  client.put(`/products/${productId}/variants/reorder`, variantIds)
