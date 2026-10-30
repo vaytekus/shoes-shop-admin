@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getOrderById, updateOrderStatus } from '@/api/ordersApi'
@@ -27,6 +28,7 @@ const STATUS_CLASS: Record<OrderStatus, string> = {
 const ALL_STATUSES: OrderStatus[] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
 
 export default function OrderDetailPage() {
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -59,6 +61,8 @@ export default function OrderDetailPage() {
   if (isLoading) return <p className="text-muted-foreground">Завантаження...</p>
   if (!order) return <p className="text-muted-foreground">Замовлення не знайдено</p>
 
+  const currentStatus = selectedStatus ?? order.status
+
   const user = userData?.data
   const customerName = user ? `${user.firstName} ${user.lastName}`.trim() || user.email : order.customerId
 
@@ -76,24 +80,31 @@ export default function OrderDetailPage() {
           <h1 className="text-2xl font-semibold">Замовлення</h1>
           <p className="text-xs font-mono text-muted-foreground mt-0.5">{order.id}</p>
         </div>
-        <Select
-          value={order.status}
-          onValueChange={(v) => mutation.mutate(v as OrderStatus)}
-          disabled={mutation.isPending}
-        >
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ALL_STATUSES.map(s => (
-              <SelectItem key={s} value={s}>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${STATUS_CLASS[s]}`}>
-                  {STATUS_LABELS[s]}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select
+            value={currentStatus}
+            onValueChange={(v) => setSelectedStatus(v as OrderStatus)}
+            disabled={mutation.isPending}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ALL_STATUSES.map(s => (
+                <SelectItem key={s} value={s}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${STATUS_CLASS[s]}`}>
+                    {STATUS_LABELS[s]}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedStatus && selectedStatus !== order.status && (
+            <Button size="sm" onClick={() => mutation.mutate(selectedStatus)} disabled={mutation.isPending}>
+              Зберегти
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-8">

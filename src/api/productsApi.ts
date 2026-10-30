@@ -62,3 +62,6 @@ export const deleteImages = (productId: string, variantId: string, urls: string[
 
 export const reorderVariants = (productId: string, variantIds: string[]) =>
   client.put(`/products/${productId}/variants/reorder`, variantIds)
+
+export const setPrimaryVariant = (productId: string, variantId: string) =>
+  client.put(`/products/${productId}/variants/${variantId}/set-primary`)

@@ -8,7 +8,7 @@ import DeleteDialog from '@/components/ui/delete-dialog'
 import ImageDropzone from './ImageDropzone'
 import SizeRangeGenerator from './SizeRangeGenerator'
 import type { ProductVariant } from '@/types'
-import { deleteVariant, uploadImages, reorderImages, deleteImages, addSize, updateSize, deleteSize } from '@/api/productsApi'
+import { deleteVariant, uploadImages, reorderImages, deleteImages, addSize, updateSize, deleteSize, setPrimaryVariant } from '@/api/productsApi'
 import { toast } from 'sonner'
 
 export interface VariantFields {
@@ -76,16 +76,36 @@ export default function VariantFormRemote({ productId, variant, onDeleted, onRef
   return (
     <div className="border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted-foreground">ID: {variant.id.slice(0, 8)}...</span>
-        <DeleteDialog
-          title={`Видалити варіант "${variant.name}"?`}
-          description="Варіант, всі його фото і розміри будуть видалені назавжди."
-          onConfirm={handleDelete}
-        >
-          <Button type="button" variant="ghost" size="icon">
-            <Trash2 size={15} />
-          </Button>
-        </DeleteDialog>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">ID: {variant.id.slice(0, 8)}...</span>
+          {variant.isPrimary && (
+            <Badge variant="default" className="text-xs">Пріоритетний</Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {!variant.isPrimary && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await setPrimaryVariant(productId, variant.id)
+                onRefresh()
+              }}
+            >
+              Зробити пріоритетним
+            </Button>
+          )}
+          <DeleteDialog
+            title={`Видалити варіант "${variant.name}"?`}
+            description="Варіант, всі його фото і розміри будуть видалені назавжди."
+            onConfirm={handleDelete}
+          >
+            <Button type="button" variant="ghost" size="icon">
+              <Trash2 size={15} />
+            </Button>
+          </DeleteDialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
