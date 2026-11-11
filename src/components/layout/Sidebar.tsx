@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, Tag, ShoppingBag, Users, LogOut, Sun, Moon, Camera } from 'lucide-react'
+import { LayoutDashboard, Package, Tag, ShoppingBag, Users, Star, LogOut, Sun, Moon, Camera } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,7 @@ const links = [
   { to: '/categories', label: 'Категорії', icon: Tag },
   { to: '/orders', label: 'Замовлення', icon: ShoppingBag },
   { to: '/users', label: 'Користувачі', icon: Users },
+  { to: '/reviews', label: 'Відгуки', icon: Star },
 ]
 
 const AVATAR_KEY = 'admin-avatar'

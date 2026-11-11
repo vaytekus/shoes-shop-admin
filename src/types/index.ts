@@ -96,3 +96,16 @@ export interface Order {
   shippingAddress: ShippingAddress
   items: OrderItem[]
 }
+
+export type ReviewStatus = 'Pending' | 'Approved' | 'Rejected'
+
+export interface AdminReview {
+  id: string
+  productId: string
+  productName: string
+  customerName: string
+  rating: number
+  text: string
+  createdAt: string
+  status: ReviewStatus
+}
