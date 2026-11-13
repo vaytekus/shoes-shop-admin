@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-xl">Вхід в адмінку</CardTitle>
         </CardHeader>

@@ -50,6 +50,8 @@ export default function OrderDetailPage() {
     enabled: !!order?.customerId,
   })
 
+  const isGuest = !order?.customerId
+
   const mutation = useMutation({
     mutationFn: (status: OrderStatus) => updateOrderStatus(id!, status),
     onSuccess: () => {
@@ -64,7 +66,9 @@ export default function OrderDetailPage() {
   const currentStatus = selectedStatus ?? order.status
 
   const user = userData?.data
-  const customerName = user ? `${user.firstName} ${user.lastName}`.trim() || user.email : order.customerId
+  const customerName = isGuest
+    ? `${order.firstName} ${order.lastName}`.trim()
+    : user ? `${user.firstName} ${user.lastName}`.trim() || user.email : order.customerId
 
   return (
     <div className="max-w-2xl">
@@ -111,8 +115,10 @@ export default function OrderDetailPage() {
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Покупець</p>
           <p className="text-sm font-medium">{customerName}</p>
-          {user?.email && customerName !== user.email && (
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+          <p className="text-xs text-muted-foreground">{order.email}</p>
+          <p className="text-xs text-muted-foreground">{order.phone}</p>
+          {isGuest && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Гість</span>
           )}
         </div>
         <div className="space-y-1">

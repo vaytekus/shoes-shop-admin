@@ -90,6 +90,12 @@ export interface OrderItem {
 export interface Order {
   id: string
   customerId: string
+  firstName: string
+  lastName: string
+  phone: string
+  email: string
+  deliveryType: string
+  paymentMethod: string
   status: OrderStatus
   totalAmount: number
   createdAt: string

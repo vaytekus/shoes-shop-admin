@@ -138,7 +138,7 @@ export default function OrdersPage() {
               {paged.map(o => (
                 <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/orders/${o.id}`)}>
                   <TableCell className="font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}...</TableCell>
-                  <TableCell className="text-sm"><CustomerName customerId={o.customerId} /></TableCell>
+                  <TableCell className="text-sm"><CustomerName customerId={o.customerId} firstName={o.firstName} lastName={o.lastName} /></TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_CLASS[o.status]}`}>
                       {STATUS_LABELS[o.status]}

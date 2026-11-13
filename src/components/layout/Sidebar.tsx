@@ -14,8 +14,6 @@ const links = [
   { to: '/reviews', label: 'Відгуки', icon: Star },
 ]
 
-const AVATAR_KEY = 'admin-avatar'
-
 function getInitials(name: string | null, email: string): string {
   if (name) {
     return name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2)
@@ -28,11 +26,12 @@ export default function Sidebar() {
   const user = useAuthStore((s) => s.user)
   const { theme, toggle } = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [avatar, setAvatar] = useState<string | null>(() => localStorage.getItem(AVATAR_KEY))
+  const avatarKey = `admin-avatar-${user?.email ?? 'unknown'}`
+  const [avatar, setAvatar] = useState<string | null>(() => localStorage.getItem(`admin-avatar-${user?.email ?? 'unknown'}`))
 
   useEffect(() => {
-    if (avatar) localStorage.setItem(AVATAR_KEY, avatar)
-  }, [avatar])
+    if (avatar) localStorage.setItem(avatarKey, avatar)
+  }, [avatar, avatarKey])
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

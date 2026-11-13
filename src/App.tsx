@@ -29,7 +29,7 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 
   if (checking) return null
   if (!user) return <Navigate to="/login" replace />
-  if (!user.roles.includes('admin')) return <div className="p-8 text-destructive">Доступ заборонено</div>
+  if (!user.roles.includes('admin')) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
