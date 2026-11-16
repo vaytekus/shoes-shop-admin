@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getOrderById, updateOrderStatus } from '@/api/ordersApi'
+import { getOrderById, updateOrderStatus, setTrackingNumber } from '@/api/ordersApi'
 import { getUserById } from '@/api/usersApi'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   Shipped: 'Відправлено',
   Delivered: 'Доставлено',
   Cancelled: 'Скасовано',
+  Returned: 'Повернено',
 }
 
 const STATUS_CLASS: Record<OrderStatus, string> = {
@@ -23,12 +24,14 @@ const STATUS_CLASS: Record<OrderStatus, string> = {
   Shipped: 'bg-purple-100 text-purple-800 border-purple-200',
   Delivered: 'bg-green-100 text-green-800 border-green-200',
   Cancelled: 'bg-red-100 text-red-800 border-red-200',
+  Returned: 'bg-orange-100 text-orange-800 border-orange-200',
 }
 
-const ALL_STATUSES: OrderStatus[] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
+const ALL_STATUSES: OrderStatus[] = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned']
 
 export default function OrderDetailPage() {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null)
+  const [trackingInput, setTrackingInput] = useState<string | null>(null)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -57,6 +60,15 @@ export default function OrderDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order', id] })
       toast.success('Статус оновлено')
+    },
+  })
+
+  const trackingMutation = useMutation({
+    mutationFn: (tn: string) => setTrackingNumber(id!, tn),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] })
+      setTrackingInput(null)
+      toast.success('ТТН збережено')
     },
   })
 
@@ -116,7 +128,7 @@ export default function OrderDetailPage() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Покупець</p>
           <p className="text-sm font-medium">{customerName}</p>
           <p className="text-xs text-muted-foreground">{order.email}</p>
-          <p className="text-xs text-muted-foreground">{order.phone}</p>
+          <a href={`tel:${order.phone}`} className="text-sm text-foreground hover:underline">{order.phone}</a>
           {isGuest && (
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Гість</span>
           )}
@@ -136,6 +148,22 @@ export default function OrderDetailPage() {
           <p className="text-sm">
             {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.zipCode}, {order.shippingAddress.country}
           </p>
+        </div>
+        <div className="space-y-1 col-span-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">ТТН Нова Пошта</p>
+          <div className="flex items-center gap-2">
+            <input
+              value={trackingInput ?? order.trackingNumber}
+              onChange={e => setTrackingInput(e.target.value)}
+              placeholder="Номер накладної"
+              className="text-sm border border-border rounded-md px-3 py-1.5 w-56 focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            {trackingInput !== null && trackingInput !== order.trackingNumber && (
+              <Button size="sm" onClick={() => trackingMutation.mutate(trackingInput)} disabled={trackingMutation.isPending}>
+                Зберегти
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

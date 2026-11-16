@@ -10,5 +10,8 @@ export const getOrderById = (id: string) =>
 export const updateOrderStatus = (id: string, status: OrderStatus) =>
   client.put(`/orders/${id}/status`, { status })
 
+export const setTrackingNumber = (id: string, trackingNumber: string) =>
+  client.put(`/orders/${id}/tracking`, { trackingNumber })
+
 export const getCustomerOrders = (customerId: string, page = 1, pageSize = 10) =>
   client.get<PagedResult<Order>>(`/orders/customer/${customerId}?page=${page}&pageSize=${pageSize}`)

@@ -70,7 +70,7 @@ export interface AuthUser {
   name: string | null
 }
 
-export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'
+export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned'
 
 export interface ShippingAddress {
   street: string
@@ -100,6 +100,7 @@ export interface Order {
   totalAmount: number
   createdAt: string
   shippingAddress: ShippingAddress
+  trackingNumber: string
   items: OrderItem[]
 }
 
