@@ -25,6 +25,7 @@ export interface ProductVariant {
 export interface Product {
   id: string
   name: string
+  modelName: string | null
   description: string
   price: number
   brand: string | null

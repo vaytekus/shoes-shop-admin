@@ -20,7 +20,7 @@ import {
 } from '@/constants/productOptions'
 
 const emptyForm = {
-  name: '', description: '', price: '', brand: '',
+  name: '', modelName: '', description: '', price: '', brand: '',
   section: '', discountPercent: '', categoryId: '',
   upperMaterial: '', liningMaterial: '', insoleMaterial: '', soleMaterial: '',
   width: '', season: '', heelHeight: '', purpose: '', style: '',
@@ -58,6 +58,7 @@ export default function ProductEditPage() {
     if (!product) return
     setForm({
       name: product.name,
+      modelName: product.modelName ?? '',
       description: product.description,
       price: String(product.price),
       brand: product.brand ?? '',
@@ -111,6 +112,7 @@ export default function ProductEditPage() {
     try {
       await client.put(`/products/${id}`, {
         name: form.name,
+        modelName: form.modelName || null,
         description: form.description,
         price: Number(form.price),
         brand: form.brand || null,
@@ -191,6 +193,10 @@ export default function ProductEditPage() {
           <div className="space-y-1.5">
             <Label>Бренд</Label>
             <Input placeholder="Nike" value={form.brand} onChange={e => set('brand', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Назва моделі</Label>
+            <Input placeholder="Air Max 90" value={form.modelName} onChange={e => set('modelName', e.target.value)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -338,7 +344,7 @@ export default function ProductEditPage() {
                 section: form.section || undefined,
                 category: categories.find(c => c.id === form.categoryId)?.name,
                 brand: form.brand || undefined,
-                modelName: form.name || undefined,
+                modelName: form.modelName || undefined,
               }}
             />
           </div>

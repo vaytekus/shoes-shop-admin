@@ -30,7 +30,7 @@ function createEmptyVariant(): LocalVariant {
 type Errors = Partial<Record<string, string>>
 
 const emptyForm = {
-  name: '', description: '', price: '', brand: '',
+  name: '', modelName: '', description: '', price: '', brand: '',
   section: '', discountPercent: '', categoryId: '',
   upperMaterial: '', liningMaterial: '', insoleMaterial: '', soleMaterial: '',
   width: '', season: '', heelHeight: '', purpose: '', style: '',
@@ -85,6 +85,7 @@ export default function ProductCreatePage() {
     try {
       const res = await client.post<string>('/products', {
         name: form.name,
+        modelName: form.modelName || null,
         description: form.description,
         price: Number(form.price),
         brand: form.brand || null,
@@ -120,7 +121,7 @@ export default function ProductCreatePage() {
             section: form.section || undefined,
             category: categories.find(c => c.id === form.categoryId)?.name,
             brand: form.brand || undefined,
-            modelName: form.name || undefined,
+            modelName: form.modelName || undefined,
           })
         }
 
@@ -175,6 +176,10 @@ export default function ProductCreatePage() {
           <div className="space-y-1.5">
             <Label>Бренд</Label>
             <Input placeholder="Nike" value={form.brand} onChange={e => set('brand', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Назва моделі</Label>
+            <Input placeholder="Air Max 90" value={form.modelName} onChange={e => set('modelName', e.target.value)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
